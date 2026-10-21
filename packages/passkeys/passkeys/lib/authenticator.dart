@@ -8,7 +8,10 @@ import 'package:passkeys_platform_interface/passkeys_platform_interface.dart';
 /// Handles platform dependent parts of the registration and authentication
 /// flow.
 class PasskeyAuthenticator
-    implements PasskeyAuthenticatorInterface, RestoreCredentialInterface {
+    implements
+        PasskeyAuthenticatorInterface,
+        RestoreCredentialInterface,
+        PasswordCredentialInterface {
   /// Constructor
   PasskeyAuthenticator({bool? debugMode})
     : _platform = PasskeysPlatform.instance,
@@ -50,6 +53,12 @@ class PasskeyAuthenticator
   /// Creates a new passkey and stores it on the device.
   /// Returns [RegisterResponseType] which must be sent to the relying party
   /// server.
+  ///
+  /// When [RegisterRequestType.mediation] is [MediationType.Conditional] no UI
+  /// is shown: the platform either creates the passkey or throws
+  /// [ConditionalCreateNotEligibleException] (or
+  /// [ConditionalCreateUnsupportedException] where conditional create does
+  /// not exist).
   @override
   Future<RegisterResponseType> register(RegisterRequestType request) async {
     if (debugMode) {
@@ -92,6 +101,10 @@ class PasskeyAuthenticator
           throw PasskeyUnsupportedException(e.message);
         case 'android-no-create-option':
           throw NoCreateOptionException(e.message);
+        case 'not-eligible':
+          throw ConditionalCreateNotEligibleException(e.message);
+        case 'conditional-create-unsupported':
+          throw ConditionalCreateUnsupportedException(e.message);
         case 'android-timeout':
           throw TimeoutException(e.message);
         case 'ios-security-key-timeout':
@@ -104,6 +117,63 @@ class PasskeyAuthenticator
           } else {
             rethrow;
           }
+      }
+    }
+  }
+
+  /// Shows the platform credential manager with the user's saved passwords
+  /// and, when [passkeyRequest] is given, their passkeys, and returns the one
+  /// the user picks.
+  ///
+  /// A returned password has not been checked by anyone: sign in with it as if
+  /// the user had typed it. A returned passkey assertion must be sent to the
+  /// relying party server exactly like the result of [authenticate].
+  ///
+  /// Throws [PasskeyAuthCancelledException] when the user dismisses the sheet,
+  /// [NoCredentialsAvailableException] when nothing is saved, and
+  /// [PasswordCredentialUnsupportedException] on platforms other than Android.
+  @override
+  Future<PasswordOrPasskeyResponseType> getPasswordOrPasskey(
+    AuthenticateRequestType? passkeyRequest,
+  ) async {
+    if (debugMode && passkeyRequest != null) {
+      await _doctor?.check(passkeyRequest.relyingPartyId);
+    }
+
+    try {
+      await _platform.cancelCurrentAuthenticatorOperation();
+
+      if (passkeyRequest != null) {
+        _isValidChallenge(passkeyRequest.challenge);
+        for (final credential in passkeyRequest.allowCredentials ?? const []) {
+          _isValidCredentialID(credential.id);
+        }
+      }
+
+      return await _platform.getPasswordOrPasskey(passkeyRequest);
+    } on PlatformException catch (e, stackTrace) {
+      if (debugMode) {
+        _doctor?.recordException(e);
+      }
+
+      switch (e.code) {
+        case 'password-credential-unsupported':
+          throw PasswordCredentialUnsupportedException(e.message);
+        case 'cancelled':
+          throw PasskeyAuthCancelledException();
+        case 'android-no-credential':
+          throw NoCredentialsAvailableException();
+        case 'domain-not-associated':
+          throw DomainNotAssociatedException(e.message);
+        case 'android-sync-account-not-available':
+          throw SyncAccountNotAvailableException();
+        case 'android-timeout':
+          throw TimeoutException(e.message);
+        default:
+          if (e.code.startsWith('android-unhandled')) {
+            throw UnhandledAuthenticatorException(e.code, e.message, e.details);
+          }
+          Error.throwWithStackTrace(e, stackTrace);
       }
     }
   }

@@ -65,3 +65,17 @@ abstract interface class RestoreCredentialInterface {
   /// A no-op on platforms without restore credentials.
   Future<void> clearRestoreCredential();
 }
+
+/// Interface for authenticators that can return a saved password or a passkey
+/// from the platform credential manager in a single sheet.
+///
+/// Separate from [PasskeyAuthenticatorInterface] so that existing
+/// implementations of that interface keep compiling. The `passkeys` package's
+/// `PasskeyAuthenticator` implements it.
+abstract interface class PasswordCredentialInterface {
+  /// Returns the saved password or passkey the user picks. [passkeyRequest]
+  /// adds the user's passkeys to the sheet; without it only passwords show.
+  Future<PasswordOrPasskeyResponseType> getPasswordOrPasskey(
+    AuthenticateRequestType? passkeyRequest,
+  );
+}
