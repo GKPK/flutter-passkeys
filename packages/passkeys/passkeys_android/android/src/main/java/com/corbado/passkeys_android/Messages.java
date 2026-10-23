@@ -1537,7 +1537,7 @@ public class Messages {
 
     void authenticate(@NonNull String relyingPartyId, @NonNull String challenge, @Nullable Long timeout, @Nullable String userVerification, @Nullable List<AllowCredential> allowCredentials, @Nullable Boolean preferImmediatelyAvailableCredentials, @Nullable String salt, @NonNull Result<AuthenticateResponse> result);
     /** Without [challenge] only saved passwords are offered. */
-    void getPasswordOrPasskey(@Nullable String relyingPartyId, @Nullable String challenge, @Nullable Long timeout, @Nullable String userVerification, @Nullable List<AllowCredential> allowCredentials, @Nullable String salt, @NonNull Result<PasswordOrPasskeyResponse> result);
+    void getPasswordOrPasskey(@Nullable String relyingPartyId, @Nullable String challenge, @Nullable Long timeout, @Nullable String userVerification, @Nullable List<AllowCredential> allowCredentials, @Nullable String salt, @NonNull Boolean preferImmediatelyAvailableCredentials, @NonNull Result<PasswordOrPasskeyResponse> result);
 
     void cancelCurrentAuthenticatorOperation(@NonNull VoidResult result);
 
@@ -1703,6 +1703,7 @@ public class Messages {
                 String userVerificationArg = (String) args.get(3);
                 List<AllowCredential> allowCredentialsArg = (List<AllowCredential>) args.get(4);
                 String saltArg = (String) args.get(5);
+                Boolean preferImmediatelyAvailableCredentialsArg = (Boolean) args.get(6);
                 Result<PasswordOrPasskeyResponse> resultCallback =
                     new Result<PasswordOrPasskeyResponse>() {
                       public void success(PasswordOrPasskeyResponse result) {
@@ -1716,7 +1717,7 @@ public class Messages {
                       }
                     };
 
-                api.getPasswordOrPasskey(relyingPartyIdArg, challengeArg, timeoutArg, userVerificationArg, allowCredentialsArg, saltArg, resultCallback);
+                api.getPasswordOrPasskey(relyingPartyIdArg, challengeArg, timeoutArg, userVerificationArg, allowCredentialsArg, saltArg, preferImmediatelyAvailableCredentialsArg, resultCallback);
               });
         } else {
           channel.setMessageHandler(null);

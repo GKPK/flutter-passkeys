@@ -779,14 +779,14 @@ class PasskeysApi {
   }
 
   /// Without [challenge] only saved passwords are offered.
-  Future<PasswordOrPasskeyResponse> getPasswordOrPasskey(String? relyingPartyId, String? challenge, int? timeout, String? userVerification, List<AllowCredential>? allowCredentials, String? salt) async {
+  Future<PasswordOrPasskeyResponse> getPasswordOrPasskey(String? relyingPartyId, String? challenge, int? timeout, String? userVerification, List<AllowCredential>? allowCredentials, String? salt, bool preferImmediatelyAvailableCredentials) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.passkeys_android.PasskeysApi.getPasswordOrPasskey$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[relyingPartyId, challenge, timeout, userVerification, allowCredentials, salt]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[relyingPartyId, challenge, timeout, userVerification, allowCredentials, salt, preferImmediatelyAvailableCredentials]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(

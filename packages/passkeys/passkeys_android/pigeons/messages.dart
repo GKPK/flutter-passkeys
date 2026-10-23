@@ -226,6 +226,7 @@ abstract class PasskeysApi {
     String? userVerification,
     List<AllowCredential>? allowCredentials,
     String? salt,
+    bool preferImmediatelyAvailableCredentials,
   );
 
   @async

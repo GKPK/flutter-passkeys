@@ -129,13 +129,17 @@ class PasskeyAuthenticator
   /// the user had typed it. A returned passkey assertion must be sent to the
   /// relying party server exactly like the result of [authenticate].
   ///
+  /// With [preferImmediatelyAvailableCredentials] no sheet is shown when
+  /// nothing is saved on the device, which suits showing it unprompted.
+  ///
   /// Throws [PasskeyAuthCancelledException] when the user dismisses the sheet,
   /// [NoCredentialsAvailableException] when nothing is saved, and
   /// [PasswordCredentialUnsupportedException] on platforms other than Android.
   @override
   Future<PasswordOrPasskeyResponseType> getPasswordOrPasskey(
-    AuthenticateRequestType? passkeyRequest,
-  ) async {
+    AuthenticateRequestType? passkeyRequest, {
+    bool preferImmediatelyAvailableCredentials = false,
+  }) async {
     if (debugMode && passkeyRequest != null) {
       await _doctor?.check(passkeyRequest.relyingPartyId);
     }
@@ -150,7 +154,11 @@ class PasskeyAuthenticator
         }
       }
 
-      return await _platform.getPasswordOrPasskey(passkeyRequest);
+      return await _platform.getPasswordOrPasskey(
+        passkeyRequest,
+        preferImmediatelyAvailableCredentials:
+            preferImmediatelyAvailableCredentials,
+      );
     } on PlatformException catch (e, stackTrace) {
       if (debugMode) {
         _doctor?.recordException(e);

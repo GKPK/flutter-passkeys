@@ -75,7 +75,10 @@ abstract interface class RestoreCredentialInterface {
 abstract interface class PasswordCredentialInterface {
   /// Returns the saved password or passkey the user picks. [passkeyRequest]
   /// adds the user's passkeys to the sheet; without it only passwords show.
+  /// [preferImmediatelyAvailableCredentials] skips the sheet when nothing is
+  /// saved on the device.
   Future<PasswordOrPasskeyResponseType> getPasswordOrPasskey(
-    AuthenticateRequestType? passkeyRequest,
-  );
+    AuthenticateRequestType? passkeyRequest, {
+    bool preferImmediatelyAvailableCredentials = false,
+  });
 }

@@ -62,8 +62,9 @@ class PasskeysAndroid extends PasskeysPlatform {
 
   @override
   Future<PasswordOrPasskeyResponseType> getPasswordOrPasskey(
-    AuthenticateRequestType? passkeyRequest,
-  ) async {
+    AuthenticateRequestType? passkeyRequest, {
+    bool preferImmediatelyAvailableCredentials = false,
+  }) async {
     final r = await _api.getPasswordOrPasskey(
       passkeyRequest?.relyingPartyId,
       passkeyRequest?.challenge,
@@ -71,6 +72,7 @@ class PasskeysAndroid extends PasskeysPlatform {
       passkeyRequest?.userVerification,
       passkeyRequest == null ? null : _allowCredentials(passkeyRequest),
       passkeyRequest?.prf,
+      preferImmediatelyAvailableCredentials,
     );
 
     final passkey = r.passkey;

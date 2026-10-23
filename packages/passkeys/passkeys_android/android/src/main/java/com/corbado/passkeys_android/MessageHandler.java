@@ -280,6 +280,7 @@ public class MessageHandler implements Messages.PasskeysApi {
     public void getPasswordOrPasskey(@Nullable String relyingPartyId, @Nullable String challenge,
             @Nullable Long timeout, @Nullable String userVerification,
             @Nullable List<Messages.AllowCredential> allowCredentials, @Nullable String salt,
+            @NonNull Boolean preferImmediatelyAvailableCredentials,
             @NonNull Messages.Result<Messages.PasswordOrPasskeyResponse> result) {
         if (android.os.Build.VERSION.SDK_INT < 28) {
             result.error(new Messages.FlutterError("password-credential-unsupported",
@@ -288,7 +289,8 @@ public class MessageHandler implements Messages.PasskeysApi {
         }
 
         GetCredentialRequest.Builder builder = new GetCredentialRequest.Builder()
-                .addCredentialOption(new GetPasswordOption());
+                .addCredentialOption(new GetPasswordOption())
+                .setPreferImmediatelyAvailableCredentials(preferImmediatelyAvailableCredentials);
         if (relyingPartyId != null && challenge != null) {
             try {
                 JSONObject optionsJson = buildGetCredentialOptions(relyingPartyId, challenge, timeout,
@@ -346,6 +348,11 @@ public class MessageHandler implements Messages.PasskeysApi {
      */
     @Nullable
     private static Messages.FlutterError conditionalCreateError(@NonNull CreateCredentialException e) {
+        // Play services reports an excludeCredentials match as TYPE_NO_CREATE_OPTIONS ([50157]) in conditional mode.
+        String message = e.getMessage();
+        if (message != null && message.toLowerCase().contains("excluded credentials")) {
+            return new Messages.FlutterError("exclude-credentials-match", message, EXCLUDE_CREDENTIALS_MATCH_ERROR);
+        }
         String type = e.getType();
         if (e instanceof CreateCredentialNoCreateOptionException || type.endsWith("TYPE_NO_CREATE_OPTIONS")) {
             return new Messages.FlutterError("not-eligible", e.getMessage(), CONDITIONAL_CREATE_NOT_ELIGIBLE_ERROR);
